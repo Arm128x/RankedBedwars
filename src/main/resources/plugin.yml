@@ -1,0 +1,4 @@
+name: RankedBedwars
+version: '${project.version}'
+main: com.kasp.rbw.RBW
+description: by kasp#0675
