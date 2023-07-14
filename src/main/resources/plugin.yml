@@ -2,3 +2,9 @@ name: RankedBedwars
 version: '${project.version}'
 main: com.kasp.rbw.RBW
 description: by kasp#0675
+softdepend: [BedWars1058]
+commands:
+  register:
+    description: Link your discord with mc account
+  rename:
+    description: Re-link your discord with mc account

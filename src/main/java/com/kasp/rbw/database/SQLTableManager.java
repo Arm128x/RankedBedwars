@@ -60,14 +60,6 @@ public class SQLTableManager {
                 "scoredBy TEXT);");
     }
 
-    public static void createMapsTable() {
-        SQLite.updateData("CREATE TABLE IF NOT EXISTS maps(" +
-                "name TEXT," +
-                "heightLimit INTEGER," +
-                "team1 TEXT," +
-                "team2 TEXT);");
-    }
-
     public static void createQueuesTable() {
         SQLite.updateData("CREATE TABLE IF NOT EXISTS queues(" +
                 "discordID TEXT," +

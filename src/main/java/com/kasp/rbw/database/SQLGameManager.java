@@ -17,7 +17,7 @@ public class SQLGameManager {
                 " VALUES(" + g.getNumber() + "," +
                 "'" + g.getState().toString().toUpperCase() + "'," +
                 "'" + g.isCasual() + "'," +
-                "'" + g.getMap().getName() + "'," +
+                "'" + (g.getMap() == null ? null : g.getMap().getName()) + "'," +
                 "'" + g.getChannelID() + "'," +
                 "'" + g.getVC1ID() + "'," +
                 "'" + g.getVC2ID() + "'," +

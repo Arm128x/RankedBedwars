@@ -1,5 +1,6 @@
 package com.kasp.rbw.instance;
 
+import com.andrei1058.bedwars.api.arena.IArena;
 import com.kasp.rbw.EmbedType;
 import com.kasp.rbw.GameState;
 import com.kasp.rbw.PickingMode;
@@ -12,6 +13,8 @@ import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.requests.ErrorResponse;
+import org.bukkit.Bukkit;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -74,20 +77,20 @@ public class Game {
 
         this.casual = queue.isCasual();
 
-        List<GameMap> maps = new ArrayList<>(MapCache.getMaps().values());
-        Collections.shuffle(maps);
-        this.map = maps.get(0);
+        List<GameMap> validMaps = new ArrayList<>();
+        for (GameMap map : MapCache.getMaps().values())
+            if (map.getMaxPlayers() == players.size()/2)
+                validMaps.add(map);
+
+        Collections.shuffle(validMaps);
+        this.map = validMaps.get(0);
 
         this.channelsCategory = guild.getCategoryById(Config.getValue("game-channels-category"));
         this.vcsCategory = guild.getCategoryById(Config.getValue("game-vcs-category"));
 
-        TextChannel channel = channelsCategory.createTextChannel(Config.getValue("game-channel-names").replaceAll("%number%", number + "").replaceAll("%mode%", queue.getPlayersEachTeam() + "v" + queue.getPlayersEachTeam())).complete();
-        VoiceChannel vc1 = vcsCategory.createVoiceChannel(Config.getValue("game-vc-names").replaceAll("%number%", number + "").replaceAll("%mode%", queue.getPlayersEachTeam() + "v" +queue.getPlayersEachTeam()).replaceAll("%team%", "1")).setUserlimit(queue.getPlayersEachTeam()).complete();
-        VoiceChannel vc2 = vcsCategory.createVoiceChannel(Config.getValue("game-vc-names").replaceAll("%number%", number + "").replaceAll("%mode%", queue.getPlayersEachTeam() + "v" +queue.getPlayersEachTeam()).replaceAll("%team%", "2")).setUserlimit(queue.getPlayersEachTeam()).complete();
-
-        channelID = channel.getId();
-        vc1ID = vc1.getId();
-        vc2ID = vc2.getId();
+        channelID = channelsCategory.createTextChannel(Config.getValue("game-channel-names").replaceAll("%number%", number + "").replaceAll("%mode%", queue.getPlayersEachTeam() + "v" + queue.getPlayersEachTeam())).complete().getId();
+        vc1ID = vcsCategory.createVoiceChannel(Config.getValue("game-vc-names").replaceAll("%number%", number + "").replaceAll("%mode%", queue.getPlayersEachTeam() + "v" +queue.getPlayersEachTeam()).replaceAll("%team%", "1")).setUserlimit(queue.getPlayersEachTeam()).complete().getId();
+        vc2ID = vcsCategory.createVoiceChannel(Config.getValue("game-vc-names").replaceAll("%number%", number + "").replaceAll("%mode%", queue.getPlayersEachTeam() + "v" +queue.getPlayersEachTeam()).replaceAll("%team%", "2")).setUserlimit(queue.getPlayersEachTeam()).complete().getId();
 
         Collections.shuffle(players);
         this.remainingPlayers = new ArrayList<>(players);
@@ -105,8 +108,8 @@ public class Game {
             this.team2.add(captain2);
 
             try {
-                guild.moveVoiceMember(guild.getMemberById(captain1.getID()), vc1).queue(null, new ErrorHandler().ignore(ErrorResponse.USER_NOT_CONNECTED));
-                guild.moveVoiceMember(guild.getMemberById(captain2.getID()), vc2).queue(null, new ErrorHandler().ignore(ErrorResponse.USER_NOT_CONNECTED));
+                guild.moveVoiceMember(guild.getMemberById(captain1.getID()), guild.getVoiceChannelById(vc1ID)).queue(null, new ErrorHandler().ignore(ErrorResponse.USER_NOT_CONNECTED));
+                guild.moveVoiceMember(guild.getMemberById(captain2.getID()), guild.getVoiceChannelById(vc2ID)).queue(null, new ErrorHandler().ignore(ErrorResponse.USER_NOT_CONNECTED));
             } catch (Exception ignored) {}
 
             this.remainingPlayers.remove(captain1);
@@ -114,14 +117,14 @@ public class Game {
         }
 
         for (Player p : players) {
-            channel.createPermissionOverride(guild.getMemberById(p.getID())).setAllow(Permission.VIEW_CHANNEL).queue();
-            vc1.createPermissionOverride(guild.getMemberById(p.getID())).setAllow(Permission.VIEW_CHANNEL).setAllow(Permission.VOICE_CONNECT).queue();
-            vc2.createPermissionOverride(guild.getMemberById(p.getID())).setAllow(Permission.VIEW_CHANNEL).setAllow(Permission.VOICE_CONNECT).queue();
+            guild.getTextChannelById(channelID).createPermissionOverride(guild.getMemberById(p.getID())).setAllow(Permission.VIEW_CHANNEL).queue();
+            guild.getVoiceChannelById(vc1ID).createPermissionOverride(guild.getMemberById(p.getID())).setAllow(Permission.VIEW_CHANNEL).setAllow(Permission.VOICE_CONNECT).queue();
+            guild.getVoiceChannelById(vc2ID).createPermissionOverride(guild.getMemberById(p.getID())).setAllow(Permission.VIEW_CHANNEL).setAllow(Permission.VOICE_CONNECT).queue();
         }
 
         for (Player p : remainingPlayers) {
             try {
-                guild.moveVoiceMember(guild.getMemberById(p.getID()), vc1).queue(null, new ErrorHandler().ignore(ErrorResponse.USER_NOT_CONNECTED));
+                guild.moveVoiceMember(guild.getMemberById(p.getID()), guild.getVoiceChannelById(vc1ID)).queue(null, new ErrorHandler().ignore(ErrorResponse.USER_NOT_CONNECTED));
             } catch (Exception ignored) {}
         }
 
@@ -192,9 +195,28 @@ public class Game {
     }
 
     public void pickTeams() {
-        if (queue.getPickingMode() == PickingMode.AUTOMATIC) {
-            playersInParties = new HashMap<>();
 
+        // bad way of doing a map check but oh well im lazy
+        if (this.map == null) {
+            Embed embed = new Embed(EmbedType.ERROR, "No Maps Available", "There are currently no maps available, please try queueing again later (`=maps`)", 1);
+
+            String mentions = "";
+            for (Player p : players) {
+                mentions += guild.getMemberById(p.getID()).getAsMention();
+            }
+
+            guild.getTextChannelById(channelID).sendMessage(mentions).setEmbeds(embed.build()).queue();
+
+            closeChannel(300);
+            setState(GameState.VOIDED);
+            setScoredBy(RBW.guild.getMemberById(RBW.jda.getSelfUser().getId()));
+
+            return;
+        }
+
+        playersInParties = new HashMap<>();
+
+        if (queue.getPickingMode() == PickingMode.AUTOMATIC) {
             if (PartyCache.getParty(captain1) != null) {
                 playersInParties.put(captain1, PartyCache.getParty(captain1).getMembers().size());
             }
@@ -264,17 +286,14 @@ public class Game {
             closeChannel(1800);
         }
 
+        warpToMap(5);
+
         updateGame(this);
     }
 
     public void sendGameMsg() {
 
-        String mentions = "";
-        for (Player p : players) {
-            mentions += guild.getMemberById(p.getID()).getAsMention();
-        }
-
-        Embed embed = new Embed(com.kasp.rbw.EmbedType.DEFAULT, "Game `#" + number + "`", "", 1);
+        Embed embed = new Embed(EmbedType.DEFAULT, "Game `#" + number + "`", "", 1);
 
         if (queue.getPickingMode() == PickingMode.CAPTAINS) {
             embed.setDescription(guild.getMemberById(currentCaptain.getID()).getAsMention() + "'s turn to `=pick`");
@@ -322,6 +341,11 @@ public class Game {
             }
 
             embed.setDescription("do not forget to `=submit` after your game ends");
+        }
+
+        String mentions = "";
+        for (Player p : players) {
+            mentions += guild.getMemberById(p.getID()).getAsMention();
         }
 
         guild.getTextChannelById(channelID).sendMessage(mentions).setEmbeds(embed.build()).queue();
@@ -397,10 +421,14 @@ public class Game {
             int difference;
             int elo = p.getElo();
 
+
             double eloMultiplier = Double.parseDouble(Config.getValue("solo-multiplier"));
-            if (queue.getPickingMode() == PickingMode.AUTOMATIC) {
-                if (playersInParties.containsKey(p)) {
-                    eloMultiplier = Double.parseDouble(Config.getValue("party-multiplier-" + playersInParties.get(p)));
+
+            if (playersInParties != null) {
+                if (queue.getPickingMode() == PickingMode.AUTOMATIC) {
+                    if (playersInParties.containsKey(p)) {
+                        eloMultiplier = Double.parseDouble(Config.getValue("party-multiplier-" + playersInParties.get(p)));
+                    }
                 }
             }
 
@@ -426,10 +454,46 @@ public class Game {
         setState(GameState.SCORED);
 
         setScoredBy(scoredBy);
-        Player player = PlayerCache.getPlayer(scoredBy.getId());
-        player.setScored(player.getScored() + 1);
+
+        if (scoredBy != RBW.guild.getMemberById(RBW.jda.getSelfUser().getId())) {
+            Player player = PlayerCache.getPlayer(scoredBy.getId());
+            player.setScored(player.getScored() + 1);
+        }
 
         SQLGameManager.updateEloGain(number);
+
+        // EMBED
+
+        Embed embed = new Embed(EmbedType.SUCCESS, "Game `#" + number + "` has been scored", "", 1);
+
+        String team1 = "";
+        for (Player p : this.team1) {
+            team1 += "• <@" + p.getID() + "> `(+)`**" + eloGain.get(p) + "** `" + (p.getElo() - eloGain.get(p)) + "` > `" + p.getElo() + "`\n";
+        }
+
+        String team2 = "";
+        for (Player p : this.team2) {
+            team2 += "• <@" + p.getID() + "> `(+)`**" + eloGain.get(p) + "** `" + (p.getElo() - eloGain.get(p)) + "` > `" + p.getElo() + "`\n";
+        }
+
+        embed.addField("Team 1:", team1, false);
+        embed.addField("Team 2:", team2, false);
+
+        if (mvp != null) {
+            embed.addField("MVP", "<@" + mvp.getID() + ">", false);
+        }
+
+        embed.addField("Scored by", scoredBy.getAsMention(), false);
+
+        if (!Objects.equals(Config.getValue("scored-announcing"), null)) {
+            guild.getTextChannelById(Config.getValue("scored-announcing")).sendMessageEmbeds(embed.build()).queue();
+        }
+
+        if (guild.getTextChannelById(channelID) != null) {
+            guild.getTextChannelById(channelID).sendMessageEmbeds(embed.build()).queue();
+        }
+
+        // EMBED END
 
         closeChannel(Integer.parseInt(Config.getValue("game-deleting-time")));
     }
@@ -493,6 +557,72 @@ public class Game {
         };
 
         new Timer().schedule(closingTask, timeSeconds * 1000L);
+    }
+
+    public void warpToMap(int triesMax) {
+        Bukkit.getScheduler().runTask(RBW.getInstance(), () -> {
+            IArena arena =  RBW.bedwarsAPI.getArenaUtil().getArenaByName(this.map.getName());
+
+            new BukkitRunnable() {
+                int tries = 0;
+
+                @Override
+                public void run() {
+                    tries++;
+
+                    try {
+                        for (Player p : team1) {
+                            if (arena.getPlayers().contains(Bukkit.getPlayer(p.getIgn()))) {
+                                continue;
+                            }
+
+                            // try to warp
+                            if (!arena.addPlayer(Bukkit.getPlayer(p.getIgn()), true)) {
+                                Embed embed = new Embed(EmbedType.ERROR, "Failed To Warp", "<@" + p.getID() + "> please get online on `" + Config.getValue("server-ip") + "`\nRetrying to warp in `30` seconds `[Tries: " + tries + "/" + triesMax +"]`", 1);
+
+                                guild.getTextChannelById(channelID).sendMessage("<@" + p.getID() + ">").setEmbeds(embed.build()).queue();
+                            }
+
+                            // set team
+                            arena.getTeams().get(0).addPlayers(Bukkit.getPlayer(p.getIgn()));
+                        }
+
+                        for (Player p : team2) {
+                            if (arena.getPlayers().contains(Bukkit.getPlayer(p.getIgn()))) {
+                                continue;
+                            }
+
+                            // try to warp
+                            if (!arena.addPlayer(Bukkit.getPlayer(p.getIgn()), true)) {
+                                Embed embed = new Embed(EmbedType.ERROR, "Failed To Warp", "<@" + p.getID() + "> please get online on `" + Config.getValue("server-ip") + "`\nRetrying to warp in `30` seconds `[Tries: " + tries + "/" + triesMax +"]`", 1);
+
+                                guild.getTextChannelById(channelID).sendMessage("<@" + p.getID() + ">").setEmbeds(embed.build()).queue();
+                            }
+
+                            // set team
+                            arena.getTeams().get(1).addPlayers(Bukkit.getPlayer(p.getIgn()));
+                        }
+
+                        if (arena.getPlayers().size() == team1.size() + team2.size()) {
+                            cancel();
+
+                            Embed embed = new Embed(EmbedType.SUCCESS, "Warped To Map", "Successfully warped everyone to map `" + arena.getArenaName() + "`", 1);
+                            guild.getTextChannelById(channelID).sendMessageEmbeds(embed.build()).queue();
+                            return;
+                        }
+
+                        if (tries == triesMax) {
+                            Embed embed = new Embed(EmbedType.ERROR, "Failed To Warp", "All tries `[" + triesMax + "/" + triesMax + "]` used\nPlease retry using `=retry` or `=void` the game", 1);
+                            guild.getTextChannelById(channelID).sendMessageEmbeds(embed.build()).queue();
+                            cancel();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        cancel();
+                    }
+                }
+            }.runTaskTimer(RBW.getInstance(), 20L, 20L * 30);
+        });
     }
 
     public static void createGame(Game g) {

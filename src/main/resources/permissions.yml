@@ -33,6 +33,7 @@ partywarp: everyone
 partykick: everyone
 
 # game commands
+retry: everyone
 queue: everyone
 queuestats: everyone
 gameinfo: everyone

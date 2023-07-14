@@ -1,6 +1,9 @@
 package com.kasp.rbw.instance;
 
+import com.kasp.rbw.EmbedType;
 import com.kasp.rbw.PickingMode;
+import com.kasp.rbw.RBW;
+import com.kasp.rbw.config.Config;
 import com.kasp.rbw.database.SQLite;
 import com.kasp.rbw.instance.cache.PartyCache;
 import com.kasp.rbw.instance.cache.QueueCache;
@@ -98,9 +101,29 @@ public class Queue {
                             }
 
                             if (playerList.size() == getPlayersEachTeam() * 2) {
-                                new Game(playerList, q).pickTeams();
-                                for (Player p : playerList) {
-                                    players.remove(p);
+                                int channelCount;
+
+                                try {
+                                    channelCount = RBW.guild.getCategoryById(Config.getValue("game-vcs-category")).getChannels().size();
+                                } catch (Exception e) {
+                                    channelCount = 0;
+                                }
+
+                                if (channelCount < 49) {
+                                    new Game(playerList, q).pickTeams();
+                                    for (Player p : playerList) {
+                                        players.remove(p);
+                                    }
+                                }
+                                else {
+                                    String mentions = "";
+                                    for (Player p : playerList) {
+                                        mentions+="<@" + p.getID() + ">";
+                                    }
+
+                                    Embed embed = new Embed(EmbedType.ERROR, "Too Many Games", "There's already 50 game vcs (max channels for discord category) so I cannot make any more\n" +
+                                            "Please wait a little or void the on-going games", 1);
+                                    RBW.guild.getTextChannelById(Config.getValue("alerts-channel")).sendMessage(mentions).setEmbeds(embed.build()).queue();
                                 }
                             }
                         }

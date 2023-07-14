@@ -1,5 +1,6 @@
 package com.kasp.rbw.instance;
 
+import com.kasp.rbw.RBW;
 import com.kasp.rbw.instance.cache.ClanLevelCache;
 import org.yaml.snakeyaml.Yaml;
 
@@ -21,7 +22,7 @@ public class ClanLevel {
         else {
             Yaml yaml = new Yaml();
             try {
-                Map<String, Object> data = yaml.load(new FileInputStream("RankedBot/clanlevels.yml"));
+                Map<String, Object> data = yaml.load(new FileInputStream(RBW.getInstance().getDataFolder() + "/RankedBot/clanlevels.yml"));
 
                neededXP = Integer.parseInt(data.get("l" + level).toString());
             } catch (FileNotFoundException e) {

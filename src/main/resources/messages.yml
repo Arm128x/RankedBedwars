@@ -13,7 +13,6 @@ not-game-channel: "You can use this command only in game channels"
 
 # player
 already-registered: "You are already registered"
-ign-too-long: "Max character limit when registering is 16 characters"
 successfully-registered: "You have successfully registered, have fun playing!"
 successfully-wiped: "You have successfully wiped the player's stats"
 player-already-registered: "The player you're trying to register is already registered"

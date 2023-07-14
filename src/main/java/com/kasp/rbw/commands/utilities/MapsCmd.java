@@ -27,7 +27,7 @@ public class MapsCmd extends Command {
 
         String maps = "";
         for (GameMap m : MapCache.getMaps().values()) {
-            maps += "**" + m.getName() + "** — `Height: " + m.getHeight() + "` (" + m.getTeam1() + " vs " + m.getTeam2() + ")\n";
+            maps += "`[" + m.getArenaState() + "]` " + "**" + m.getName() + "** `(" + m.getMaxPlayers() + "v" + m.getMaxPlayers() + ")` — Height: " + m.getHeight() + " (" + m.getTeam1() + " vs " + m.getTeam2() + ")\n";
         }
 
         Embed embed;

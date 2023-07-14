@@ -4,7 +4,6 @@ import com.kasp.rbw.CommandSubsystem;
 import com.kasp.rbw.EmbedType;
 import com.kasp.rbw.GameState;
 import com.kasp.rbw.commands.Command;
-import com.kasp.rbw.config.Config;
 import com.kasp.rbw.instance.Embed;
 import com.kasp.rbw.instance.Game;
 import com.kasp.rbw.instance.Player;
@@ -17,7 +16,6 @@ import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 
 import java.util.List;
-import java.util.Objects;
 
 public class ScoreCmd extends Command {
     public ScoreCmd(String command, String usage, String[] aliases, String description, CommandSubsystem subsystem) {
@@ -63,38 +61,12 @@ public class ScoreCmd extends Command {
             losingTeam = game.getTeam1();
         }
 
-        game.scoreGame(winningTeam, losingTeam, PlayerCache.getPlayer(mvpID), sender);
-
-        Embed embed = new Embed(EmbedType.SUCCESS, "Game `#" + game.getNumber() + "` has been scored", "", 1);
-
-        String team1 = "";
-        for (Player p : game.getTeam1()) {
-            team1 += "• <@" + p.getID() + "> `(+)`**" + game.getEloGain().get(p) + "** `" + (p.getElo() - game.getEloGain().get(p)) + "` > `" + p.getElo() + "`\n";
-        }
-
-        String team2 = "";
-        for (Player p : game.getTeam2()) {
-            team2 += "• <@" + p.getID() + "> `(+)`**" + game.getEloGain().get(p) + "** `" + (p.getElo() - game.getEloGain().get(p)) + "` > `" + p.getElo() + "`\n";
-        }
-
-        embed.addField("Team 1:", team1, false);
-        embed.addField("Team 2:", team2, false);
-
-        if (!mvpID.equals("")) {
-            embed.addField("MVP", "<@" + mvpID + ">", false);
-        }
-
-        embed.addField("Scored by", sender.getAsMention(), false);
-
-        if (!Objects.equals(Config.getValue("scored-announcing"), null)) {
-            guild.getTextChannelById(Config.getValue("scored-announcing")).sendMessageEmbeds(embed.build()).queue();
-        }
+        if (args[3].equalsIgnoreCase("none"))
+            game.scoreGame(winningTeam, losingTeam, null, sender);
+        else
+            game.scoreGame(winningTeam, losingTeam, PlayerCache.getPlayer(mvpID), sender);
 
         Embed reply = new Embed(EmbedType.SUCCESS, "", "You have scored Game`#" + game.getNumber() + "`", 1);
         msg.replyEmbeds(reply.build()).queue();
-
-        if (guild.getTextChannelById(game.getChannelID()) != null) {
-            guild.getTextChannelById(game.getChannelID()).sendMessageEmbeds(embed.build()).queue();
-        }
     }
 }

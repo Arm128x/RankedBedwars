@@ -43,10 +43,18 @@ public class QueueJoin extends ListenerAdapter {
                     Embed embed = new Embed(EmbedType.ERROR, "You Cannot Queue", "", 1);
                     embed.addField("It appears that you've been banned", "If this is a mistake, please do `=fix`. If it still doesn't remove your banned role, you can open an appeal ticket / contact staff", false);
                     alerts.sendMessage(event.getMember().getAsMention()).setEmbeds(embed.build()).queue();
+                    return;
                 }
-                else {
-                    queue.addPlayer(player);
+
+                if (!player.isOnline()) {
+                    event.getGuild().kickVoiceMember(event.getMember()).queue();
+
+                    Embed embed = new Embed(EmbedType.ERROR, "You Cannot Queue", "You have to be online on `" + Config.getValue("server-ip") + "` to queue", 1);
+                    alerts.sendMessage(event.getMember().getAsMention()).setEmbeds(embed.build()).queue();
+                    return;
                 }
+
+                queue.addPlayer(player);
             }
         }
         // left vc

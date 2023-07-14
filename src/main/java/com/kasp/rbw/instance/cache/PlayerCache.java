@@ -13,6 +13,16 @@ public class PlayerCache {
         return players.get(ID);
     }
 
+    public static Player getPlayerByIgn(String ign) {
+        for (Player p : players.values()) {
+            if (p.getIgn().equalsIgnoreCase(ign)) {
+                return p;
+            }
+        }
+
+        return null;
+    }
+
     public static void addPlayer(Player player) {
         players.put(player.getID(), player);
 

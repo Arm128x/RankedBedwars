@@ -1,10 +1,11 @@
 package com.kasp.rbw.instance;
 
-import com.kasp.rbw.database.SQLite;
+import com.andrei1058.bedwars.api.arena.GameState;
+import com.kasp.rbw.RBW;
 import com.kasp.rbw.instance.cache.MapCache;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class GameMap {
 
@@ -12,27 +13,35 @@ public class GameMap {
     private int height;
     private String team1;
     private String team2;
+    private GameState arenaState;
+    private int maxPlayers;
 
     public GameMap(String name) {
         this.name = name;
 
-        ResultSet resultSet = SQLite.queryData("SELECT * FROM maps WHERE name='" + name + "';");
-
-        try {
-            this.height = resultSet.getInt(2);
-            this.team1 = resultSet.getString(3);
-            this.team2 = resultSet.getString(4);
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
+        this.height = RBW.bedwarsAPI.getArenaUtil().getArenaByName(name).getConfig().getInt("max-build-y");
+        this.team1 = RBW.bedwarsAPI.getArenaUtil().getArenaByName(name).getTeams().get(0).getName();
+        this.team2 = RBW.bedwarsAPI.getArenaUtil().getArenaByName(name).getTeams().get(1).getName();
+        this.arenaState = RBW.bedwarsAPI.getArenaUtil().getArenaByName(name).getStatus();
+        this.maxPlayers = RBW.bedwarsAPI.getArenaUtil().getArenaByName(name).getMaxInTeam();
 
         MapCache.initializeMap(name, this);
-    }
 
-    public static void delete(String name) {
-        MapCache.removeMap(MapCache.getMap(name));
+        TimerTask checkTask = new TimerTask () {
+            @Override
+            public void run () {
+                if (RBW.bedwarsAPI.getArenaUtil().getArenaByName(name) == null) {
+                    cancel();
+                    if (MapCache.containsMap(name))
+                        MapCache.removeMap(MapCache.getMap(name));
+                    return;
+                }
 
-        SQLite.updateData("DELETE FROM maps WHERE name='" + name + "';");
+                MapCache.getMap(name).setArenaState(RBW.bedwarsAPI.getArenaUtil().getArenaByName(name).getStatus());
+            }
+        };
+
+        new Timer().schedule(checkTask, 1000, 1000);
     }
 
     public String getName() {
@@ -58,5 +67,15 @@ public class GameMap {
     }
     public void setTeam2(String team2) {
         this.team2 = team2;
+    }
+    public GameState getArenaState() {
+        return arenaState;
+    }
+    public int getMaxPlayers() {
+        return maxPlayers;
+    }
+
+    public void setArenaState(GameState arenaState) {
+        this.arenaState = arenaState;
     }
 }

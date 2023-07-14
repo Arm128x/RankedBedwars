@@ -1,17 +1,17 @@
 package com.kasp.rbw;
 
+import com.andrei1058.bedwars.api.BedWars;
+import com.andrei1058.bedwars.api.arena.IArena;
 import com.kasp.rbw.commands.CommandManager;
 import com.kasp.rbw.commands.moderation.UnbanTask;
+import com.kasp.rbw.commandsMC.MCRegisterCmd;
+import com.kasp.rbw.commandsMC.MCRenameCmd;
 import com.kasp.rbw.config.Config;
 import com.kasp.rbw.database.SQLTableManager;
 import com.kasp.rbw.database.SQLite;
 import com.kasp.rbw.instance.*;
-import com.kasp.rbw.instance.Queue;
 import com.kasp.rbw.levelsfile.Levels;
-import com.kasp.rbw.listener.PagesEvents;
-import com.kasp.rbw.listener.PartyInviteButton;
-import com.kasp.rbw.listener.QueueJoin;
-import com.kasp.rbw.listener.ServerJoin;
+import com.kasp.rbw.listener.*;
 import com.kasp.rbw.messages.Msg;
 import com.kasp.rbw.perms.Perms;
 import net.dv8tion.jda.api.JDA;
@@ -21,25 +21,37 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.ChunkingFilter;
 import net.dv8tion.jda.api.utils.MemberCachePolicy;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import javax.security.auth.login.LoginException;
 import java.io.File;
 import java.sql.ResultSet;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public final class RBW extends JavaPlugin {
+
+    public static BedWars bedwarsAPI = null;
 
     private static RBW rbw;
 
     public static JDA jda;
 
-    public static String version = "1.0.0";
+    public static String version = "1.1.0";
     public static Guild guild;
 
     @Override
     public void onEnable() {
         rbw = this;
+
+        bedwarsAPI = Bukkit.getServicesManager().getRegistration(BedWars.class).getProvider();
+
+        getServer().getPluginManager().registerEvents(new BW1058Events(), this);
+        getCommand("register").setExecutor(new MCRegisterCmd());
+        getCommand("rename").setExecutor(new MCRenameCmd());
 
         new File(getDataFolder() + "/RankedBot/fonts").mkdirs();
         new File(getDataFolder() + "/RankedBot/themes").mkdirs();
@@ -48,7 +60,6 @@ public final class RBW extends JavaPlugin {
         SQLTableManager.createPlayersTable();
         SQLTableManager.createRanksTable();
         SQLTableManager.createGamesTable();
-        SQLTableManager.createMapsTable();
         SQLTableManager.createQueuesTable();
         SQLTableManager.createClansTable();
 
@@ -112,7 +123,7 @@ public final class RBW extends JavaPlugin {
                 // =============
 
                 List<String> ranks = new ArrayList<>();
-                List<String> maps = new ArrayList<>();
+                //List<String> maps = new ArrayList<>();
                 List<String> queues = new ArrayList<>();
                 List<String> players = new ArrayList<>();
                 List<String> games = new ArrayList<>();
@@ -124,10 +135,10 @@ public final class RBW extends JavaPlugin {
                         ranks.add(rs.getString(1));
                     }
 
-                    rs = SQLite.queryData("SELECT * FROM maps");
+                    /*rs = SQLite.queryData("SELECT * FROM maps");
                     while (rs.next()) {
                         maps.add(rs.getString(1));
-                    }
+                    }*/
 
                     rs = SQLite.queryData("SELECT * FROM queues");
                     while (rs.next()) {
@@ -161,11 +172,21 @@ public final class RBW extends JavaPlugin {
                     }
                 }
 
-                for (String s : maps) {
+                /*for (String s : maps) {
                     try {
                         new GameMap(s);
                     } catch (Exception e) {
                         System.out.println("[!] a map could not be loaded! Please make a bug report on support discord asap");
+                    }
+                }*/
+
+                for (IArena arena : bedwarsAPI.getArenaUtil().getArenas()) {
+                    if (arena.getGroup().startsWith("rbw")) {
+                        try {
+                            new GameMap(arena.getArenaName());
+                        } catch (Exception e) {
+                            System.out.println("[!] a map could not be loaded! Please make a bug report on support discord asap");
+                        }
                     }
                 }
 
@@ -203,9 +224,11 @@ public final class RBW extends JavaPlugin {
 
                 System.out.println("-------------------------------");
 
-                System.out.println("RankedBot has been successfully enabled!");
+                System.out.println("RankedBedwars has been successfully enabled!");
                 System.out.println("NOTE: this bot can only be in 1 server, otherwise it'll break");
                 System.out.println("don't forget to configure config.yml and permissions.yml before using it\nYou can also edit messages.yml (optional)");
+                System.out.println("");
+                System.out.println("IMPORTANT: if you add/remove maps in-game please restart the bot");
 
                 System.out.println("-------------------------------");
             }

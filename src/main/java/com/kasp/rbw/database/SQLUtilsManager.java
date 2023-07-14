@@ -47,23 +47,4 @@ public class SQLUtilsManager {
 
         return 0;
     }
-
-    public static void createMap(String name, String height, String team1, String team2) {
-        SQLite.updateData("INSERT INTO maps(name, heightLimit, team1, team2)" +
-                " VALUES('" + name + "'," +
-                height + "," +
-                "'" + team1 + "'," +
-                "'" + team2 + "');");
-    }
-
-    public static int getMapSize() {
-        ResultSet resultSet = SQLite.queryData("SELECT COUNT(name) FROM maps");
-        try {
-            return resultSet.getInt(1);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return 0;
-    }
 }

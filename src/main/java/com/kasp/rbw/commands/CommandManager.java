@@ -39,8 +39,8 @@ public class CommandManager extends ListenerAdapter {
         commands.add(new ReloadConfigCmd("reloadconfig", "reloadconfig", new String[]{"reload", "rc"}, "Reload the configs (update values)", CommandSubsystem.SERVER));
         commands.add(new InfoCmd("info", "info", new String[]{}, "View some info about the server and bot", CommandSubsystem.SERVER));
 
-        commands.add(new RegisterCmd("register", "register <in-game name>", new String[]{}, "Register yourself to start playing", CommandSubsystem.PLAYER));
-        commands.add(new RenameCmd("rename", "rename <in-game name>", new String[]{}, "Change your in-game name", CommandSubsystem.PLAYER));
+        commands.add(new RegisterCmd("register", "register", new String[]{}, "Register yourself to start playing", CommandSubsystem.PLAYER));
+        commands.add(new RenameCmd("rename", "rename", new String[]{}, "Change your in-game name", CommandSubsystem.PLAYER));
         commands.add(new FixCmd("fix", "fix [ID/mention]", new String[]{"correct"}, "Fix discord roles and nickname depending on the stats", CommandSubsystem.PLAYER));
         commands.add(new ForceRegisterCmd("forceregister", "forceregister <ID/mention> <ign>", new String[]{"freg"}, "Forcefully register a player", CommandSubsystem.PLAYER));
         commands.add(new ForceRenameCmd("forcerename", "forcerename <ID/mention> <new ign>", new String[]{"fren"}, "Forcefully rename a player", CommandSubsystem.PLAYER));
@@ -60,6 +60,7 @@ public class CommandManager extends ListenerAdapter {
         commands.add(new PartyListCmd("partylist", "partylist [ID/mention]", new String[]{"plist"}, "View info about your or someone else's party", CommandSubsystem.PARTY));
         commands.add(new PartyKickCmd("partykick", "partykick <ID/mention>", new String[]{"pkick"}, "Kick a player from your party", CommandSubsystem.PARTY));
 
+        commands.add(new RetryCmd("retry", "retry", new String[]{}, "Retry to warp players into a map", CommandSubsystem.GAME));
         commands.add(new QueueCmd("queue", "queue", new String[]{"q"}, "View your game's queue", CommandSubsystem.GAME));
         commands.add(new QueueStatsCmd("queuestats", "queuestats", new String[]{"qs"}, "View your game's queue stats", CommandSubsystem.GAME));
         commands.add(new GameInfoCmd("gameinfo", "gameinfo <number>", new String[]{"gi"}, "View info about a game", CommandSubsystem.GAME));
@@ -71,7 +72,7 @@ public class CommandManager extends ListenerAdapter {
         commands.add(new UndoGameCmd("undogame", "undogame <number>", new String[]{}, "Undo a scored game", CommandSubsystem.GAME));
         commands.add(new WinCmd("win", "win <ID/mention>", new String[]{}, "Give specified player +1 win and elo (depends on the rank). This command should be used ONLY when '=score' doesn't work or for testing purposes", CommandSubsystem.GAME));
         commands.add(new LoseCmd("lose", "lose <ID/mention>", new String[]{}, "Give specified player +1 loss and -elo (depends on the rank). This command should be used ONLY when '=score' doesn't work or for testing purposes", CommandSubsystem.GAME));
-        commands.add(new ForceVoidCmd("forcevoid", "forcevoid", new String[]{"fv"}, "Forcefully void a game (staff cmd)", CommandSubsystem.GAME));
+        commands.add(new ForceVoidCmd("forcevoid", "forcevoid [game]", new String[]{"fv"}, "Forcefully void a game (staff cmd)", CommandSubsystem.GAME));
 
         commands.add(new AddQueueCmd("addqueue", "addqueue <vc ID> <playersEachTeam> <pickingMode (AUTOMATIC/CAPTAINS)> <casual (true/false)>", new String[]{"addq"}, "Add a ranked/casual queue", CommandSubsystem.UTILITIES));
         commands.add(new DeleteQueueCmd("deletequeue", "deletequeue <vc ID>", new String[]{"delq", "delqueue"}, "Delete a ranked/casual queue", CommandSubsystem.UTILITIES));
@@ -79,8 +80,6 @@ public class CommandManager extends ListenerAdapter {
         commands.add(new AddRankCmd("addrank", "addrank <role ID/mention> <starting elo> <ending elo> <win elo> <lose elo> <mvp elo>", new String[]{"addr"}, "Add a rank", CommandSubsystem.UTILITIES));
         commands.add(new DeleteRankCmd("deleterank", "deleterank <role ID/mention>", new String[]{"delr", "delrank"}, "Delete a rank", CommandSubsystem.UTILITIES));
         commands.add(new RanksCmd("ranks", "ranks", new String[]{}, "View all ranks and info about them", CommandSubsystem.UTILITIES));
-        commands.add(new AddMapCmd("addmap", "addmap <name> <height> <team1> <team2>", new String[]{"addm"}, "Add an in-game map", CommandSubsystem.UTILITIES));
-        commands.add(new DeleteMapCmd("deletemap", "deletemap <name>", new String[]{"delm", "delmap"}, "Delete an in-game map", CommandSubsystem.UTILITIES));
         commands.add(new MapsCmd("maps", "maps", new String[]{}, "View all maps and info about them", CommandSubsystem.UTILITIES));
         commands.add(new GiveThemeCmd("givetheme", "givetheme <ID/mention> <theme>", new String[]{}, "Give specified player access to a theme", CommandSubsystem.UTILITIES));
         commands.add(new RemoveThemeCmd("removetheme", "removetheme <ID/mention> <theme>", new String[]{}, "Remove specified player's access to a theme", CommandSubsystem.UTILITIES));
@@ -165,7 +164,7 @@ public class CommandManager extends ListenerAdapter {
         }
 
         if (Boolean.parseBoolean(Config.getValue("log-commands"))) {
-            System.out.println("[RankedBot] " + m.getUser() .getAsTag() + " used " + msg.getContentRaw());
+            System.out.println("[RankedBW] " + m.getUser() .getAsTag() + " used " + msg.getContentRaw());
         }
 
 

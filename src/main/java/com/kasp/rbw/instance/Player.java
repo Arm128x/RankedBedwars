@@ -10,6 +10,7 @@ import com.kasp.rbw.instance.cache.*;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
+import org.bukkit.Bukkit;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -279,6 +280,10 @@ public class Player {
     public void joinParty(Party party) {
         party.getMembers().add(this);
         party.getInvitedPlayers().remove(this);
+    }
+
+    public boolean isOnline() {
+        return Bukkit.getServer().getPlayerExact(ign) != null;
     }
 
     public double getStatistic(Statistic s) {

@@ -77,9 +77,7 @@ public class StatsCmd extends Command {
                 String uuid = null;
                 try {
                     uuid = new JSONObject(IOUtils.toString(URI.create("https://api.mojang.com/users/profiles/minecraft/" + player.getIgn()), StandardCharsets.UTF_8)).getString("id");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                } catch (Exception ignored) {}
 
                 String skinlink;
                 if (uuid != null) {
@@ -196,7 +194,7 @@ public class StatsCmd extends Command {
     private Embed statsFulLEmbed(Player player, int games, double templosses) {
         DecimalFormat f = new DecimalFormat("#.##");
 
-        Embed embed = new Embed(EmbedType.ERROR, player.getIgn() + "'s Stats", "",1);
+        Embed embed = new Embed(EmbedType.DEFAULT, player.getIgn() + "'s Stats", "",1);
 
         embed.addField("__General Stats__",
                 "> `Elo` " + player.getElo() + " **(#" + player.getPlacement(Statistic.ELO) + ")**" +

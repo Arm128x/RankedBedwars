@@ -20,19 +20,26 @@ public class ForceVoidCmd extends Command {
 
     @Override
     public void execute(String[] args, Guild guild, Member sender, TextChannel channel, Message msg) {
-        if (args.length != 1) {
+        if (args.length > 2) {
             Embed reply = new Embed(EmbedType.ERROR, "Invalid Arguments", Msg.getMsg("wrong-usage").replaceAll("%usage%", getUsage()), 1);
             msg.replyEmbeds(reply.build()).queue();
             return;
         }
 
-        if (GameCache.getGame(channel.getId()) == null) {
-            Embed reply = new Embed(EmbedType.ERROR, "Error", Msg.getMsg("not-game-channel"), 1);
-            msg.replyEmbeds(reply.build()).queue();
-            return;
-        }
+        Game game;
 
-        Game game = GameCache.getGame(channel.getId());
+        if (args.length == 1) {
+            if (GameCache.getGame(channel.getId()) == null) {
+                Embed reply = new Embed(EmbedType.ERROR, "Error", Msg.getMsg("not-game-channel"), 1);
+                msg.replyEmbeds(reply.build()).queue();
+                return;
+            }
+
+            game = GameCache.getGame(channel.getId());
+        }
+        else {
+            game = GameCache.getGame(Integer.parseInt(args[1]));
+        }
 
         game.setState(GameState.VOIDED);
         game.setScoredBy(sender);
