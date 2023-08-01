@@ -9,6 +9,7 @@ import com.kasp.rbw.config.Config;
 import com.kasp.rbw.database.SQLGameManager;
 import com.kasp.rbw.database.SQLite;
 import com.kasp.rbw.instance.cache.*;
+import com.kasp.rbw.listener.BW1058Events;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
@@ -83,7 +84,12 @@ public class Game {
                 validMaps.add(map);
 
         Collections.shuffle(validMaps);
-        this.map = validMaps.get(0);
+        if (validMaps.size() > 0) {
+            this.map = validMaps.get(0);
+        } else {
+            this.map = null;
+        }
+
 
         this.channelsCategory = guild.getCategoryById(Config.getValue("game-channels-category"));
         this.vcsCategory = guild.getCategoryById(Config.getValue("game-vcs-category"));
@@ -110,7 +116,9 @@ public class Game {
             try {
                 guild.moveVoiceMember(guild.getMemberById(captain1.getID()), guild.getVoiceChannelById(vc1ID)).queue(null, new ErrorHandler().ignore(ErrorResponse.USER_NOT_CONNECTED));
                 guild.moveVoiceMember(guild.getMemberById(captain2.getID()), guild.getVoiceChannelById(vc2ID)).queue(null, new ErrorHandler().ignore(ErrorResponse.USER_NOT_CONNECTED));
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             this.remainingPlayers.remove(captain1);
             this.remainingPlayers.remove(captain2);
@@ -125,7 +133,9 @@ public class Game {
         for (Player p : remainingPlayers) {
             try {
                 guild.moveVoiceMember(guild.getMemberById(p.getID()), guild.getVoiceChannelById(vc1ID)).queue(null, new ErrorHandler().ignore(ErrorResponse.USER_NOT_CONNECTED));
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         GameCache.initializeGame(this);
@@ -274,13 +284,15 @@ public class Game {
 
     public void start() {
         state = GameState.PLAYING;
-
+        BW1058Events.mapManager.put(map.getName(), number);
         sendGameMsg();
 
         for (Player p : team2) {
             try {
                 guild.moveVoiceMember(guild.getMemberById(p.getID()), guild.getVoiceChannelById(vc2ID)).queue(null, new ErrorHandler().ignore(ErrorResponse.USER_NOT_CONNECTED));
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         if (casual) {
             closeChannel(1800);

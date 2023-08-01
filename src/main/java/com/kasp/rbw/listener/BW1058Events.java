@@ -4,7 +4,6 @@ import com.andrei1058.bedwars.api.events.gameplay.GameEndEvent;
 import com.andrei1058.bedwars.api.events.gameplay.TeamAssignEvent;
 import com.andrei1058.bedwars.api.events.server.ArenaDisableEvent;
 import com.andrei1058.bedwars.api.events.server.ArenaEnableEvent;
-import com.kasp.rbw.GameState;
 import com.kasp.rbw.RBW;
 import com.kasp.rbw.instance.Game;
 import com.kasp.rbw.instance.GameMap;
@@ -16,9 +15,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class BW1058Events implements Listener {
+
+    // map, game
+    public static Map<String, Integer> mapManager = new HashMap<>();
 
     @EventHandler
     public void teamAssignEvent(TeamAssignEvent event) {
@@ -34,22 +38,13 @@ public class BW1058Events implements Listener {
         Game game = null;
 
         for (Game g : GameCache.getGames().values()) {
-            if (g.isCasual()) {
-                continue;
-            }
-
-            if (!g.getState().equals(GameState.PLAYING)) {
-                continue;
-            }
-
-            if (g.getMap().getName().equalsIgnoreCase(event.getArena().getArenaName())) {
+            if (g.getNumber() == mapManager.get(event.getArena().getArenaName())) {
                 game = g;
                 break;
             }
         }
 
         if (game != null) {
-
             Player maxKills = null;
             for (Player p : event.getArena().getPlayers()) {
                 if (maxKills == null)

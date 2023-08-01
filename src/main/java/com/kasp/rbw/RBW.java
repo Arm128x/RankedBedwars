@@ -74,6 +74,8 @@ public final class RBW extends JavaPlugin {
             return;
         }
 
+        if (!new AdvancedLicense(Config.getValue("license"), "https://rankedbedwars.000webhostapp.com/verify.php", this).register()) return;
+
         JDABuilder jdaBuilder = JDABuilder.createDefault(Config.getValue("token"));
         jdaBuilder.setStatus(OnlineStatus.valueOf(Config.getValue("status").toUpperCase()));
         jdaBuilder.setChunkingFilter(ChunkingFilter.ALL);
