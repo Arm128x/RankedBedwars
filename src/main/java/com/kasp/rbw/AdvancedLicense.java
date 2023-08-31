@@ -41,19 +41,19 @@ public class AdvancedLicense {
 	}
 
 	public boolean register() {
-		log(0, "========== [ License-System ] ==========");
+		log(0, "\n========== [ RBW Licensing ] ==========");
 		log(0, "Connecting to License-Server...");
 		ValidationType vt = isValid();
 		if (vt == ValidationType.VALID) {
 			log(1, "License valid!");
-			log(0, "========== [ License-System ] ==========");
+			log(0, "========== [ RBW Licensing ] ==========\n");
 			return true;
 		} else {
 			log(1, "License is NOT valid!");
 			log(1, "Failed as a result of " + vt.toString());
 			log(1, "Disabling plugin!");
 			log(1, "DM 13kasp on discord for help");
-			log(0, "========== [ License-System ] ==========");
+			log(0, "========== [ RBW Licensing ] ==========\n");
 
 			Bukkit.getScheduler().cancelTasks(plugin);
 			Bukkit.getPluginManager().disablePlugin(plugin);

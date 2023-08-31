@@ -40,7 +40,7 @@ public class ScoreCmd extends Command {
 
         Game game = GameCache.getGame(number);
 
-        if (!sender.getUser().isBot() && game.getState() != GameState.SUBMITTED) {
+        if (game.getState() != GameState.SUBMITTED) {
             Embed reply = new Embed(EmbedType.ERROR, "Error", Msg.getMsg("not-submitted"), 1);
             msg.replyEmbeds(reply.build()).queue();
             return;

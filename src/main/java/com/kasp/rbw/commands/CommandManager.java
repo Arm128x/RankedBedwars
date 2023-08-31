@@ -85,6 +85,7 @@ public class CommandManager extends ListenerAdapter {
         commands.add(new RemoveThemeCmd("removetheme", "removetheme <ID/mention> <theme>", new String[]{}, "Remove specified player's access to a theme", CommandSubsystem.UTILITIES));
         commands.add(new ThemeCmd("theme", "theme <theme/\"list\">", new String[]{}, "Select a theme or use \"list\" to view all themes", CommandSubsystem.UTILITIES));
         commands.add(new LevelsCmd("levels", "levels", new String[]{}, "View all levels and info about them", CommandSubsystem.UTILITIES));
+        commands.add(new SSCloseCmd("screenshareclose", "screenshareclose <reason (outcome)>", new String[]{"ssclose"}, "Close a screenshare channel", CommandSubsystem.UTILITIES));
 
         commands.add(new BanCmd("ban", "ban <ID/mention> <time> <reason>", new String[]{}, "Ban a player from queueing", CommandSubsystem.MODERATION));
         commands.add(new UnbanCmd("unban", "unban <ID/mention>", new String[]{}, "Unban a banned player", CommandSubsystem.MODERATION));
@@ -189,7 +190,7 @@ public class CommandManager extends ListenerAdapter {
             if (!Perms.getPerm(cmd.getCommand()).equals("")) {
                 List<Role> roles = new ArrayList<>();
                 for (String s : Perms.getPerm(cmd.getCommand()).split(",")) {
-                    roles.add(g.getRoleById(Long.parseLong(s)));
+                    roles.add(g.getRoleById(s));
                 }
 
                 for (Role r : m.getRoles()) {

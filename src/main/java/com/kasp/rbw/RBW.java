@@ -40,7 +40,7 @@ public final class RBW extends JavaPlugin {
 
     public static JDA jda;
 
-    public static String version = "1.1.0";
+    public static String version = "1.1.4";
     public static Guild guild;
 
     @Override

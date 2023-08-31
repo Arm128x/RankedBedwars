@@ -21,11 +21,6 @@ public class RegisterCmd extends Command {
 
     @Override
     public void execute(String[] args, Guild guild, Member sender, TextChannel channel, Message msg) {
-        if (args.length != 1) {
-            Embed reply = new Embed(EmbedType.ERROR, "Invalid Arguments", Msg.getMsg("wrong-usage").replaceAll("%usage%", getUsage()), 1);
-            msg.replyEmbeds(reply.build()).queue();
-            return;
-        }
 
         if (Player.isRegistered(sender.getId())) {
             Embed reply = new Embed(EmbedType.ERROR, "Error", Msg.getMsg("already-registered"), 1);

@@ -2,6 +2,7 @@ package com.kasp.rbw.listener;
 
 import com.andrei1058.bedwars.api.events.gameplay.GameEndEvent;
 import com.andrei1058.bedwars.api.events.gameplay.TeamAssignEvent;
+import com.andrei1058.bedwars.api.events.player.PlayerKillEvent;
 import com.andrei1058.bedwars.api.events.server.ArenaDisableEvent;
 import com.andrei1058.bedwars.api.events.server.ArenaEnableEvent;
 import com.kasp.rbw.RBW;
@@ -38,6 +39,8 @@ public class BW1058Events implements Listener {
         Game game = null;
 
         for (Game g : GameCache.getGames().values()) {
+            if (g.isCasual()) continue;
+
             if (g.getNumber() == mapManager.get(event.getArena().getArenaName())) {
                 game = g;
                 break;
@@ -93,6 +96,23 @@ public class BW1058Events implements Listener {
 
         if (MapCache.getMaps().containsKey(event.getArenaName())) {
             MapCache.removeMap(MapCache.getMap(event.getArenaName()));
+        }
+    }
+
+    @EventHandler
+    public void playerKillEvent(PlayerKillEvent event) {
+        Player victim = event.getVictim();
+        com.kasp.rbw.instance.Player rbwVictim = PlayerCache.getPlayerByIgn(victim.getName());
+        if (rbwVictim != null) {
+            rbwVictim.setDeaths(rbwVictim.getDeaths()+1);
+        }
+
+        if (event.getKiller() != null) {
+            Player killer = event.getKiller();
+            com.kasp.rbw.instance.Player rbwKiller = PlayerCache.getPlayerByIgn(killer.getName());
+            if (rbwKiller != null) {
+                rbwKiller.setKills(rbwKiller.getKills()+1);
+            }
         }
     }
 }

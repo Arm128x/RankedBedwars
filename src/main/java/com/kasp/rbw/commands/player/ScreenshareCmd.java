@@ -5,10 +5,15 @@ import com.kasp.rbw.EmbedType;
 import com.kasp.rbw.commands.Command;
 import com.kasp.rbw.config.Config;
 import com.kasp.rbw.instance.Embed;
+import com.kasp.rbw.instance.ScreenShare;
+import com.kasp.rbw.instance.cache.PlayerCache;
 import com.kasp.rbw.messages.Msg;
 import net.dv8tion.jda.api.entities.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class ScreenshareCmd extends Command {
     public ScreenshareCmd(String command, String usage, String[] aliases, String description, CommandSubsystem subsystem) {
@@ -59,14 +64,10 @@ public class ScreenshareCmd extends Command {
 
         guild.getTextChannelById(Config.getValue("ssreq-channel")).sendMessage(guild.retrieveMemberById(ID).complete().getAsMention()).setEmbeds(embed.build()).queue();
 
-        if (!Objects.equals(Config.getValue("ss-roles"), null)) {
-            String roles = "";
-            for (String s : Config.getValue("ss-roles").split(",")) {
-                roles+=guild.getRoleById(s).getAsMention();
-            }
-            guild.getTextChannelById(Config.getValue("ssreq-channel")).sendMessage(roles + " Please screenshare this player").queue();
+        if (!channel.getId().equals(Config.getValue("ssreq-channel"))) {
+            msg.reply("screenshare request sent in " + guild.getTextChannelById(Config.getValue("ssreq-channel")).getAsMention()).queue();
         }
 
-        msg.reply("screenshare request sent in " + guild.getTextChannelById(Config.getValue("ssreq-channel")).getAsMention()).queue();
+        new ScreenShare(PlayerCache.getPlayer(sender.getId()), PlayerCache.getPlayer(ID), reason);
     }
 }

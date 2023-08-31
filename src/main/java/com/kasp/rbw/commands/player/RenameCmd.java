@@ -6,7 +6,6 @@ import com.kasp.rbw.commands.Command;
 import com.kasp.rbw.config.Config;
 import com.kasp.rbw.instance.Embed;
 import com.kasp.rbw.instance.LinkManager;
-import com.kasp.rbw.messages.Msg;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Message;
@@ -19,11 +18,6 @@ public class RenameCmd extends Command {
 
     @Override
     public void execute(String[] args, Guild guild, Member sender, TextChannel channel, Message msg) {
-        if (args.length != 1) {
-            Embed reply = new Embed(EmbedType.ERROR, "Invalid Arguments", Msg.getMsg("wrong-usage").replaceAll("%usage%", getUsage()), 1);
-            msg.replyEmbeds(reply.build()).queue();
-            return;
-        }
 
         /*Player player = PlayerCache.getPlayer(sender.getId());
         player.setIgn(ign);

@@ -70,7 +70,9 @@ strike-5: 48
 # How many images do people need to attach for proof when using the command?
 ss-attachments: 1
 ssreq-channel: 947177745690034311
+ss-log-channel: 947177745690034311
 frozen-role: 954824905826897980
+ss-channels-category: 1136690811292106842
 # How many mins will ppl be automatically unfrozen in after getting ss requested
 time-till-unfrozen: 10
 

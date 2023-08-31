@@ -81,7 +81,8 @@ public class Game {
         List<GameMap> validMaps = new ArrayList<>();
         for (GameMap map : MapCache.getMaps().values())
             if (map.getMaxPlayers() == players.size()/2)
-                validMaps.add(map);
+                if (map.getArenaState().equals(com.andrei1058.bedwars.api.arena.GameState.waiting))
+                    validMaps.add(map);
 
         Collections.shuffle(validMaps);
         if (validMaps.size() > 0) {
@@ -89,7 +90,6 @@ public class Game {
         } else {
             this.map = null;
         }
-
 
         this.channelsCategory = guild.getCategoryById(Config.getValue("game-channels-category"));
         this.vcsCategory = guild.getCategoryById(Config.getValue("game-vcs-category"));
@@ -113,29 +113,34 @@ public class Game {
             this.team1.add(captain1);
             this.team2.add(captain2);
 
+            this.remainingPlayers.remove(captain1);
+            this.remainingPlayers.remove(captain2);
+
             try {
                 guild.moveVoiceMember(guild.getMemberById(captain1.getID()), guild.getVoiceChannelById(vc1ID)).queue(null, new ErrorHandler().ignore(ErrorResponse.USER_NOT_CONNECTED));
                 guild.moveVoiceMember(guild.getMemberById(captain2.getID()), guild.getVoiceChannelById(vc2ID)).queue(null, new ErrorHandler().ignore(ErrorResponse.USER_NOT_CONNECTED));
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (Exception ignored) {}
+        }
+
+        try {
+            for (Player p : players) {
+                guild.getTextChannelById(channelID).createPermissionOverride(guild.getMemberById(p.getID())).setAllow(Permission.VIEW_CHANNEL).queue();
+                guild.getVoiceChannelById(vc1ID).createPermissionOverride(guild.getMemberById(p.getID())).setAllow(Permission.VIEW_CHANNEL).setAllow(Permission.VOICE_CONNECT).queue();
+                guild.getVoiceChannelById(vc2ID).createPermissionOverride(guild.getMemberById(p.getID())).setAllow(Permission.VIEW_CHANNEL).setAllow(Permission.VOICE_CONNECT).queue();
             }
 
-            this.remainingPlayers.remove(captain1);
-            this.remainingPlayers.remove(captain2);
-        }
-
-        for (Player p : players) {
-            guild.getTextChannelById(channelID).createPermissionOverride(guild.getMemberById(p.getID())).setAllow(Permission.VIEW_CHANNEL).queue();
-            guild.getVoiceChannelById(vc1ID).createPermissionOverride(guild.getMemberById(p.getID())).setAllow(Permission.VIEW_CHANNEL).setAllow(Permission.VOICE_CONNECT).queue();
-            guild.getVoiceChannelById(vc2ID).createPermissionOverride(guild.getMemberById(p.getID())).setAllow(Permission.VIEW_CHANNEL).setAllow(Permission.VOICE_CONNECT).queue();
-        }
-
-        for (Player p : remainingPlayers) {
-            try {
+            for (Player p : remainingPlayers) {
                 guild.moveVoiceMember(guild.getMemberById(p.getID()), guild.getVoiceChannelById(vc1ID)).queue(null, new ErrorHandler().ignore(ErrorResponse.USER_NOT_CONNECTED));
-            } catch (Exception e) {
-                e.printStackTrace();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            String mentions = "";
+            for (Player p : players) {
+                mentions+="<@" + p.getID() + ">";
+            }
+            Embed embed = new Embed(EmbedType.ERROR, "Something went wrong...", "The game couldn't be created because something went wrong. Please rejoin the queue to try again. If this keeps happening contact the staff", 1);
+            guild.getTextChannelById(Config.getValue("alerts-channel")).sendMessage(mentions).setEmbeds(embed.build()).queue();
+            return;
         }
 
         GameCache.initializeGame(this);
@@ -228,20 +233,24 @@ public class Game {
 
         if (queue.getPickingMode() == PickingMode.AUTOMATIC) {
             if (PartyCache.getParty(captain1) != null) {
-                playersInParties.put(captain1, PartyCache.getParty(captain1).getMembers().size());
+                if (PartyCache.getParty(captain1).getMembers().size() != 1)
+                    playersInParties.put(captain1, PartyCache.getParty(captain1).getMembers().size());
             }
 
             if (PartyCache.getParty(captain2) != null) {
-                playersInParties.put(captain2, PartyCache.getParty(captain2).getMembers().size());
+                if (PartyCache.getParty(captain2).getMembers().size() != 1)
+                    playersInParties.put(captain2, PartyCache.getParty(captain2).getMembers().size());
             }
 
             // check for any parties
             List<Party> parties = new ArrayList<>();
             for (Player p : remainingPlayers) {
                 if (PartyCache.getParty(p) != null) {
-                    playersInParties.put(p, PartyCache.getParty(p).getMembers().size());
-                    if (!parties.contains(PartyCache.getParty(p))) {
-                        parties.add(PartyCache.getParty(p));
+                    if (PartyCache.getParty(p).getMembers().size() != 1) {
+                        playersInParties.put(p, PartyCache.getParty(p).getMembers().size());
+                        if (!parties.contains(PartyCache.getParty(p))) {
+                            parties.add(PartyCache.getParty(p));
+                        }
                     }
                 }
             }
@@ -253,8 +262,7 @@ public class Game {
                             team1.addAll(p.getMembers());
                         }
 
-                    }
-                    else {
+                    } else {
                         if (queue.getPlayersEachTeam() - team2.size() >= p.getMembers().size()) {
                             team2.addAll(p.getMembers());
                         }
@@ -268,16 +276,15 @@ public class Game {
             for (Player p : remainingPlayers) {
                 if (queue.getPlayersEachTeam() - team1.size() > 0) {
                     team1.add(p);
-                }
-                else {
+                } else {
                     team2.add(p);
                 }
             }
             remainingPlayers.clear();
 
             start();
-        }
-        else {
+
+        } else {
             sendGameMsg();
         }
     }

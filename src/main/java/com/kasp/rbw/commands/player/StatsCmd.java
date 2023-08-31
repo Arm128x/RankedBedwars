@@ -2,6 +2,7 @@ package com.kasp.rbw.commands.player;
 
 import com.kasp.rbw.CommandSubsystem;
 import com.kasp.rbw.EmbedType;
+import com.kasp.rbw.RBW;
 import com.kasp.rbw.Statistic;
 import com.kasp.rbw.commands.Command;
 import com.kasp.rbw.config.Config;
@@ -91,9 +92,9 @@ public class StatsCmd extends Command {
                     player.fix();
 
                     GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-                    ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, new File("RankedBot/fonts/stats.otf")));
+                    ge.registerFont(Font.createFont(Font.TRUETYPE_FONT, new File(RBW.getInstance().getDataFolder() + "/RankedBot/fonts/stats.otf")));
 
-                    BufferedImage image = ImageIO.read(new File("RankedBot/themes/" + player.getTheme().getName() + ".png").toURI().toURL());
+                    BufferedImage image = ImageIO.read(new File(RBW.getInstance().getDataFolder() + "/RankedBot/themes/" + player.getTheme().getName() + ".png").toURI().toURL());
 
                     BufferedImage skin;
                     try {
